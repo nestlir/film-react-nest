@@ -1,14 +1,13 @@
 import { Module } from '@nestjs/common';
-import { MongooseModule } from '@nestjs/mongoose';
-import { Order, OrderSchema } from '../schemas/order.schema';
-import { OrderController } from '../controller/order.controller';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { Order } from '../entities/order.entity'; // Заменяем MongooseSchema на TypeORM Entity
 import { OrderService } from '../service/order.service';
+import { OrderController } from '../controller/order.controller';
 
 @Module({
-  imports: [
-    MongooseModule.forFeature([{ name: Order.name, schema: OrderSchema }]),
-  ],
+  imports: [TypeOrmModule.forFeature([Order])], // Используем TypeORM вместо Mongoose
   controllers: [OrderController],
   providers: [OrderService],
+  exports: [OrderService],
 })
 export class OrderModule {}

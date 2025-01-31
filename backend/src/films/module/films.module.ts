@@ -1,13 +1,13 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { Film } from '../entities/film.entity'; // Используем TypeORM-модель
-import { FilmsService } from '../service/films.service';
-import { FilmsController } from '../controller/films.controller';
+import { Schedule } from '../entities/schedule.entity';
+import { ScheduleService } from '../../order/entities/schedule.service';
+import { ScheduleController } from '../entities/schedule.controller';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Film])], // Используем TypeORM, а не Mongoose
-  controllers: [FilmsController],
-  providers: [FilmsService],
-  exports: [FilmsService],
+  imports: [TypeOrmModule.forFeature([Schedule])],
+  controllers: [ScheduleController],
+  providers: [ScheduleService],
+  exports: [TypeOrmModule],
 })
-export class FilmsModule {}
+export class ScheduleModule {}

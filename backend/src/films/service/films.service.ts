@@ -1,16 +1,23 @@
 import { Injectable } from '@nestjs/common';
-import { InMemoryRepository } from '../../repository/in-memory.repository';
-import { FilmDto } from '../dto/films.dto';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { Film } from '../entities/film.entity';
 
 @Injectable()
 export class FilmsService {
-  private repository = new InMemoryRepository<FilmDto>();
+  constructor(
+    @InjectRepository(Film)
+    private readonly filmRepository: Repository<Film>,
+  ) {}
 
-  getAllFilms() {
-    return this.repository.getAll();
+  async getAllFilms(): Promise<Film[]> {
+    return this.filmRepository.find({ relations: ['sessions'] });
   }
 
-  getFilmById(id: string) {
-    return this.repository.findById(id);
+  async getFilmById(id: string): Promise<Film | null> {
+    return this.filmRepository.findOne({
+      where: { id },
+      relations: ['sessions'],
+    });
   }
 }

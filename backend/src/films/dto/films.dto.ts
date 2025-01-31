@@ -1,10 +1,18 @@
 //TODO описать DTO для запросов к /films
 
-export class FilmDto {
-  id: string;
+import { IsString, IsNotEmpty, IsUUID } from 'class-validator';
+
+export class CreateFilmDto {
+  @IsString()
+  @IsNotEmpty()
   title: string;
+
+  @IsString()
   description: string;
-  rating: number;
-  director: string;
-  tags: string[];
+
+  @IsString()
+  genre: string;
+
+  @IsUUID()
+  scheduleId: string;
 }

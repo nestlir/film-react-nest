@@ -5,9 +5,7 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { join } from 'path';
 
-import { DatabaseModule } from './database/database.module';
-import { RepositoriesModule } from './database/repositories.module';
-import { FilmsModule } from './films/module/films.module';
+import { ScheduleModule } from './films/module/films.module';
 import { OrderModule } from './order/module/order.module';
 
 @Module({
@@ -29,24 +27,22 @@ import { OrderModule } from './order/module/order.module';
             password: configService.get('DATABASE_PASSWORD') as string,
             database: configService.get('DATABASE_NAME') as string,
             autoLoadEntities: true,
-            synchronize: true, // Использовать только в разработке!
+            synchronize: configService.get<boolean>('DB_SYNCHRONIZE') || false,
           }),
         })
       : MongooseModule.forRoot(
-          process.env.DATABASE_URL || 'mongodb://localhost:27017/practicum',
+          process.env.DATABASE_URL || 'mongodb://localhost:27017/prac',
         ),
 
-    // Раздача статического контента
+    // Подключение статического контента
     ServeStaticModule.forRoot({
       rootPath: join(__dirname, '..', 'public'),
       serveRoot: '/content/afisha',
     }),
 
-    // Импорт бизнес-модулей
-    FilmsModule,
+    // Подключение модулей
+    ScheduleModule,
     OrderModule,
-    DatabaseModule,
-    RepositoriesModule,
   ],
 })
 export class AppModule {}

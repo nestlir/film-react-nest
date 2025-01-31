@@ -1,13 +1,14 @@
 import { Controller, Post, Body } from '@nestjs/common';
 import { OrderService } from '../service/order.service';
-import { OrderDto } from '../dto/order.dto';
+import { CreateOrderDto } from '../dto/order.dto';
 
-@Controller('order')
+@Controller('/api/afisha/order')
 export class OrderController {
   constructor(private readonly orderService: OrderService) {}
 
   @Post()
-  createOrder(@Body() order: OrderDto) {
-    return this.orderService.createOrder(order);
-  }
+  createOrder(@Body() createOrderDto: CreateOrderDto) {
+    return this.orderService.createOrder(createOrderDto);
+}
+
 }

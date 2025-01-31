@@ -1,18 +1,26 @@
 import { Entity, PrimaryGeneratedColumn, Column, ManyToOne } from 'typeorm';
-import { Film } from '../../films/entities/film.entity';
-import { Schedule } from '../entities/schedule.entity';
+import { Schedule } from '../../films/entities/schedule.entity';
 
 @Entity()
 export class Order {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @ManyToOne(() => Film, { eager: true })
-  film: Film;
+  @Column()
+  email: string;
 
-  @ManyToOne(() => Schedule, { eager: true })
+  @Column()
+  phone: string;
+
+  @ManyToOne(() => Schedule, (schedule) => schedule.orders, { onDelete: 'CASCADE' })
   schedule: Schedule;
 
-  @Column('jsonb')
-  seats: string[];
+  @Column()
+  seat: number;
+
+  @Column()
+  row: number;
+
+  @Column()
+  price: number;
 }

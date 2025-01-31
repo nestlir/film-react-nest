@@ -9,15 +9,6 @@ export class Film {
   @Column()
   title: string;
 
-  @Column('text')
-  description: string;
-
-  @Column()
-  releaseDate: Date;
-
-  @Column()
-  genre: string;
-
-  @OneToMany(() => Schedule, (schedule) => schedule.film)
+  @OneToMany(() => Schedule, (schedule) => schedule.film, { cascade: true })
   sessions: Schedule[];
 }

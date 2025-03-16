@@ -21,7 +21,7 @@
     "typeorm": "ts-node --files -r tsconfig-paths/register ./node_modules/typeorm/cli.js",
     "migrate:generate": "npm run typeorm migration:generate -- -d ./src/database/data-source.ts",
     "migrate:create": "npm run typeorm migration:create --",
-    "migrate:up": "npm run typeorm migration:run -- -d ./src/database/data-source.ts",
+    "migrate:up": "npm run typeorm migration:run -- -d dist/database/data-source.js",
     "migrate:down": "npm run typeorm migration:revert -- -d ./src/database/data-source.ts"
   },
     "dependencies": {

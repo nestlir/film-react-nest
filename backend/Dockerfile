@@ -1,16 +1,16 @@
-# Stage 1: Build
-FROM node:18 AS builder
+# <project-path>/backend/Dockerfile
+FROM node:20-alpine
+
 WORKDIR /app
+
 COPY package.json package-lock.json ./
-RUN npm install --only=production
+
+RUN yarn install
+
 COPY . .
-RUN npm run build
 
-# Stage 2: Runtime
-FROM node:18 AS final
-WORKDIR /app
-COPY --from=builder /app/dist ./dist
-COPY --from=builder /app/node_modules ./node_modules
-COPY --from=builder /app/package.json ./package.json
+RUN yarn build
 
-CMD ["node", "dist/main.js"]
+EXPOSE 3000
+
+CMD ["node", "dist/main"]

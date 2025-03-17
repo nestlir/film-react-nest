@@ -1,14 +1,13 @@
-# <project-path>/frontend/Dockerfile
-FROM node:20-alpine
-
+# Этап 1: Сборка фронтенда
+FROM node:20-alpine AS builder
 WORKDIR /app
-
 COPY package.json package-lock.json ./
-
-RUN npm i
-
+RUN npm install
 COPY . .
+RUN npm run build
 
-ARG VITE_API_URL="//localhost/api"
-
-RUN VITE_API_URL=${VITE_API_URL} npm run build
+# Этап 2: Копируем сборку в volume (будет использоваться Nginx)
+FROM alpine
+WORKDIR /var/www/frontend
+COPY --from=builder /app/dist /var/www/frontend
+CMD ["echo", "Frontend built and copied to volume"]

@@ -1,4 +1,8 @@
-import { Injectable } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  InternalServerErrorException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Film } from '../films/entities/films.entity';
@@ -13,38 +17,58 @@ export class FilmsRepository {
   ) {}
 
   async findAll(): Promise<{ items: Film[]; total: number }> {
-    const queryBuilder = this.filmRepository
-      .createQueryBuilder('film')
-      .leftJoinAndSelect('film.schedule', 'schedule');
+    try {
+      const queryBuilder = this.filmRepository
+        .createQueryBuilder('film')
+        .leftJoinAndSelect('film.schedules', 'schedules'); // ✅ Исправлено
 
-    const [items, total] = await queryBuilder.getManyAndCount();
+      const [items, total] = await queryBuilder.getManyAndCount();
 
-    return { items, total };
+      return { items, total };
+    } catch (error) {
+      console.error('🔥 Ошибка в findAll:', error);
+      throw new InternalServerErrorException('Ошибка при получении фильмов');
+    }
   }
 
   async findOne(id: string): Promise<{ items: Schedule[]; total: number }> {
-    const film = await this.filmRepository.findOne({
-      where: { id },
-      relations: ['schedule'], // Загружаем расписание
-    });
+    try {
+      const film = await this.filmRepository.findOne({
+        where: { id },
+        relations: ['schedules'], // ✅ Исправлено: `schedule` → `schedules`
+      });
 
-    return {
-      items: film?.schedule ?? [],
-      total: film?.schedule?.length ?? 0,
-    };
+      if (!film) {
+        throw new NotFoundException(`Фильм с ID ${id} не найден.`);
+      }
+
+      return {
+        items: film.schedules ?? [],
+        total: film.schedules?.length ?? 0,
+      };
+    } catch (error) {
+      console.error('🔥 Ошибка в findOne:', error); // ✅ Логируем ошибку
+      throw new InternalServerErrorException('Ошибка при получении фильма');
+    }
   }
 
   async create(createFilmDto: CreateFilmsDto): Promise<Film> {
-    const newFilm = this.filmRepository.create({
-      ...createFilmDto,
-      schedule:
-        createFilmDto.schedule?.map((scheduleDto) => {
-          const schedule = new Schedule();
-          Object.assign(schedule, scheduleDto);
-          return schedule; // Преобразуем GetScheduleDto в Schedule
-        }) ?? [],
-    });
+    try {
+      const newFilm = this.filmRepository.create({
+        ...createFilmDto,
+        schedules:
+          createFilmDto.schedule?.map((scheduleDto) => {
+            return Object.assign(new Schedule(), {
+              ...scheduleDto,
+              daytime: new Date(scheduleDto.daytime), // ✅ Исправлено
+            });
+          }) ?? [],
+      });
 
-    return this.filmRepository.save(newFilm);
+      return await this.filmRepository.save(newFilm);
+    } catch (error) {
+      console.error('🔥 Ошибка в create:', error); // ✅ Логируем ошибку
+      throw new InternalServerErrorException('Ошибка при создании фильма');
+    }
   }
 }

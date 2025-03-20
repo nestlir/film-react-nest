@@ -1,5 +1,4 @@
 import { Entity, PrimaryGeneratedColumn, Column, ManyToOne } from 'typeorm';
-import { Film } from '../../films/entities/films.entity';
 import { Schedule } from '../../films/entities/schedule.entity';
 
 @Entity()
@@ -7,17 +6,21 @@ export class Order {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @ManyToOne(() => Film, (film) => film.orders, { onDelete: 'CASCADE' })
-  film: Film;
+  @Column()
+  email: string;
 
-  @ManyToOne(() => Schedule, (schedule) => schedule.orders, {
-    onDelete: 'CASCADE',
-  })
-  session: Schedule;
+  @Column()
+  phone: string;
+
+  @ManyToOne(() => Schedule, (schedule) => schedule.orders, { onDelete: 'CASCADE' })
+  schedule: Schedule;
+
+  @Column()
+  seat: number;
 
   @Column()
   row: number;
 
   @Column()
-  seat: number;
+  price: number;
 }

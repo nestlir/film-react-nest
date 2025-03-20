@@ -21,62 +21,87 @@ export class OrderService {
     private readonly scheduleRepository: Repository<Schedule>,
   ) {}
 
-  async createOrder(orderDto: CreateOrdersDto): Promise<string> {
-    await Promise.all(
-      orderDto.tickets.map((ticket) => this.processTicket(ticket)),
-    );
-    return `Билеты куплены`;
+  async getAllOrders(): Promise<Order[]> {
+    return await this.orderRepository.find({
+      relations: ['film', 'session'],
+    });
   }
 
-  async processTicket(ticket: TicketsDto): Promise<void> {
-    const { film, session, row, seat } = ticket;
-    const seatCode = this.getSeatCode(row, seat);
+  async createOrder(orderDto: CreateOrdersDto): Promise<Order[]> {
+    console.log(
+      '🛒 Создание заказа с данными:',
+      JSON.stringify(orderDto, null, 2),
+    );
 
-    // Приведение ID к правильному типу
-    const filmId = String(film); // Фильм использует UUID (строка)
-    const sessionId = Number(session); // Сеанс использует number
+    if (!orderDto.tickets || !Array.isArray(orderDto.tickets)) {
+      throw new BadRequestException('❌ Ошибка: tickets должен быть массивом');
+    }
 
-    // Проверяем, существует ли фильм
+    const orders = await Promise.all(
+      orderDto.tickets.map((ticket) => this.processTicket(ticket, orderDto)),
+    );
+
+    return orders;
+  }
+
+  async processTicket(
+    ticket: TicketsDto,
+    orderDto: CreateOrdersDto,
+  ): Promise<Order> {
+    console.log('🎟️ Обрабатываем билет:', JSON.stringify(ticket, null, 2));
+
+    if (
+      !ticket ||
+      !ticket.film ||
+      !ticket.session ||
+      !ticket.row ||
+      !ticket.seat
+    ) {
+      throw new BadRequestException('❌ Ошибка: данные билета некорректны');
+    }
+
     const filmEntity = await this.filmRepository.findOne({
-      where: { id: filmId },
-      relations: ['schedule'],
+      where: { id: String(ticket.film) },
+      relations: ['schedules'], // ✅ Правильное имя связи
     });
 
     if (!filmEntity) {
-      throw new NotFoundException(`Фильм с ID ${film} не найден.`);
+      throw new NotFoundException(`❌ Фильм с ID ${ticket.film} не найден.`);
     }
 
-    // Проверяем, существует ли сеанс
     const sessionEntity = await this.scheduleRepository.findOne({
-      where: { id: sessionId, film: { id: filmId } }, // id теперь number
+      where: { id: String(ticket.session), film: { id: ticket.film } },
     });
 
     if (!sessionEntity) {
-      throw new NotFoundException(`Сеанс с ID ${session} не найден.`);
+      throw new NotFoundException(`❌ Сеанс с ID ${ticket.session} не найден.`);
     }
 
-    // Проверяем, занято ли место
-    const isTaken = sessionEntity.taken.includes(seatCode);
+    const seatCode = `${ticket.row}:${ticket.seat}`;
+    const isTaken =
+      Array.isArray(sessionEntity.taken) &&
+      sessionEntity.taken.includes(seatCode);
+
     if (isTaken) {
-      throw new BadRequestException(`Место ${seatCode} уже забронировано.`);
+      throw new BadRequestException(`❌ Место ${seatCode} уже забронировано.`);
     }
 
-    // Добавляем заказ с правильными объектами
     const newOrder = this.orderRepository.create({
       film: filmEntity,
       session: sessionEntity,
-      row,
-      seat,
+      row: ticket.row,
+      seat: ticket.seat,
+      email: orderDto.email,
+      phone: orderDto.phone,
     });
 
     await this.orderRepository.save(newOrder);
 
-    // Обновляем список занятых мест
-    sessionEntity.taken.push(seatCode);
+    sessionEntity.taken = sessionEntity.taken
+      ? [...sessionEntity.taken, seatCode]
+      : [seatCode];
     await this.scheduleRepository.save(sessionEntity);
-  }
 
-  private getSeatCode(row: number, seat: number): string {
-    return `${row}:${seat}`;
+    return newOrder;
   }
 }

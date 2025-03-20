@@ -1,34 +1,18 @@
-export class GetScheduleDto {
-  id: string;
-  daytime: string;
-  hall: number;
-  rows: number;
-  seats: number;
-  price: number;
-  taken: string[];
-}
+//TODO описать DTO для запросов к /films
 
-export class GetFilmsDto {
-  id: string;
-  rating: number;
-  director: string;
-  tags: string[];
-  title: string;
-  about: string;
-  description: string;
-  image: string;
-  cover: string;
-  schedule: GetScheduleDto[];
-}
+import { IsString, IsNotEmpty, IsUUID } from 'class-validator';
 
-export class CreateFilmsDto {
-  rating: number;
-  director: string;
-  tags: string[];
-  image: string;
-  cover: string;
+export class CreateFilmDto {
+  @IsString()
+  @IsNotEmpty()
   title: string;
-  about: string;
+
+  @IsString()
   description: string;
-  schedule: GetScheduleDto[];
+
+  @IsString()
+  genre: string;
+
+  @IsUUID()
+  scheduleId: string;
 }

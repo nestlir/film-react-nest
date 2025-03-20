@@ -24,32 +24,42 @@ export class FilmsService {
 
     const newFilm = this.filmRepository.create({
       ...createFilmDto,
-      schedule: scheduleEntities, // ✅ Теперь schedule имеет правильный тип
+      schedules: scheduleEntities, // ✅ Теперь schedule имеет правильный тип
     });
 
     return this.filmRepository.save(newFilm);
   }
 
   async findAll(): Promise<{ items: Film[]; total: number }> {
-    const [items, total] = await this.filmRepository.findAndCount({
-      relations: ['schedule'], // ✅ Загружаем расписания фильмов
-    });
-    return { items, total };
+    try {
+      const [items, total] = await this.filmRepository.findAndCount({
+        relations: ['schedules'],
+      });
+      return { items, total };
+    } catch (error) {
+      console.error('Ошибка в findAll:', error);
+      throw error;
+    }
   }
 
   async findOne(id: string): Promise<{ items: Schedule[]; total: number }> {
-    const film = await this.filmRepository.findOne({
-      where: { id },
-      relations: ['schedule'], // ✅ Загружаем расписание фильма
-    });
+    try {
+      const film = await this.filmRepository.findOne({
+        where: { id },
+        relations: ['schedules'],
+      });
 
-    if (!film) {
-      throw new NotFoundException(`Фильм с ID ${id} не найден.`);
+      if (!film) {
+        throw new NotFoundException(`Фильм с ID ${id} не найден.`);
+      }
+
+      return {
+        items: film.schedules ?? [],
+        total: film.schedules?.length ?? 0,
+      };
+    } catch (error) {
+      console.error('Ошибка в findOne:', error);
+      throw error;
     }
-
-    return {
-      items: film.schedule ?? [], // ✅ Возвращаем `items`, даже если расписания нет
-      total: film.schedule?.length ?? 0,
-    };
   }
 }

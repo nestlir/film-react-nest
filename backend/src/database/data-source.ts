@@ -11,8 +11,8 @@ export const AppDataSource = new DataSource({
   username: process.env.DATABASE_USERNAME || 'postgres',
   password: process.env.DATABASE_PASSWORD || '2706',
   database: process.env.DATABASE_NAME || 'film_db',
-  entities: [__dirname + '/../**/*.entity{.ts,.js}'],  // ✅ Проверен путь
-  migrations: [__dirname + '/../database/migrations/**/*{.ts,.js}'],  // ✅ Исправил путь
+  entities: [__dirname + '/../**/*.entity{.ts,.js}'],
+  migrations: [__dirname + '/../database/migrations/**/*{.ts,.js}'],
   synchronize: false,
   logging: true,
 });

@@ -7,7 +7,7 @@ export class Film {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column()
+  @Column({ type: 'float', default: 0 }) // ✅ Указали, что рейтинг — float
   rating: number;
 
   @Column()
@@ -31,9 +31,9 @@ export class Film {
   @Column()
   cover: string;
 
-  @OneToMany(() => Schedule, (schedule) => schedule.film, { cascade: true })
-  schedule: Schedule[];
+  @OneToMany(() => Schedule, (schedule) => schedule.film)
+  schedules: Schedule[];
 
-  @OneToMany(() => Order, (order) => order.film, { cascade: true }) // ✅ Добавляем связь с orders
+  @OneToMany(() => Order, (order) => order.film) // ✅ Убрали cascade, чтобы заказы не удалялись с фильмом
   orders: Order[];
 }

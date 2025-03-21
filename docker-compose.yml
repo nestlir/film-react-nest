@@ -29,6 +29,8 @@ services:
       DATABASE_USERNAME: prac
       DATABASE_PASSWORD: 2706
       DATABASE_NAME: prac
+    volumes:
+    - ./backend/public/content/afisha:/app/public/content/afisha
     networks:
       - webnet
 

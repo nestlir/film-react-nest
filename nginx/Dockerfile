@@ -1,5 +1,6 @@
 FROM nginx:alpine
 
-COPY nginx.conf /etc/nginx/conf.d/default.conf
+# Копируем только конфигурацию сайта без events/http
+COPY ./default.conf /etc/nginx/conf.d/default.conf
 
-# Фронтенд будет подключен через volume (см. docker-compose.yml)
+# Стандартный nginx.conf уже корректен в образе nginx:alpine, поэтому его не копируем!

@@ -1,90 +1,84 @@
-version: "3.8"
+version: '3.9'
 
 services:
   frontend:
     build:
       context: ./frontend
       dockerfile: Dockerfile
-    image: ghcr.io/nestlir/film-react-nest/frontend:latest
-    container_name: frontend_film
-    networks:
-      - webnet
+    container_name: frontend
     volumes:
-      - frontend_dist:/var/www/frontend  # ✅ Кладем фронт в volume
-    depends_on:
-      - backend
+      - frontend-dist:/app/dist
+    command: ["tail", "-f", "/dev/null"]
+    networks:
+      - film-network
 
   backend:
     build:
       context: ./backend
       dockerfile: Dockerfile
-    image: ghcr.io/nestlir/film-react-nest/backend:latest
-    container_name: backend_film
-    networks:
-      - webnet
-    environment:
-      DATABASE_HOST: postgres_film
-      DATABASE_PORT: 5432
-      DATABASE_USERNAME: postgres
-      DATABASE_PASSWORD: 2706
-      DATABASE_NAME: film_db
-    depends_on:
-      postgres:
-        condition: service_healthy
+    container_name: backend
     ports:
       - "3000:3000"
-
-  postgres:
-    image: postgres:15
-    container_name: postgres_film
-    networks:
-      - webnet
+    depends_on:
+      - postgres
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: 2706
-      POSTGRES_DB: film_db
-    healthcheck:
-      test: ["CMD", "pg_isready", "-U", "postgres"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
+      DATABASE_HOST: postgres
+      DATABASE_PORT: 5432
+      DATABASE_USERNAME: prac
+      DATABASE_PASSWORD: 2706
+      DATABASE_NAME: prac
+    networks:
+      - film-network
 
   nginx:
     build:
       context: ./nginx
-      dockerfile: Dockerfile
-    image: ghcr.io/nestlir/film-react-nest/nginx:latest
-    container_name: nginx_film
-    networks:
-      - webnet
+    container_name: nginx
+    restart: always
     ports:
       - "80:80"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+      - frontend-dist:/usr/share/nginx/html:ro
     depends_on:
       - frontend
       - backend
+    networks:
+      - film-network
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: postgres
+    environment:
+      POSTGRES_USER: prac
+      POSTGRES_PASSWORD: 2706
+      POSTGRES_DB: prac
+    ports:
+      - "5432:5432"
     volumes:
-      - frontend_dist:/var/www/frontend
+      - postgres-data:/var/lib/postgresql/data
+    networks:
+      - film-network
 
   pgadmin:
     image: dpage/pgadmin4
-    container_name: pgadmin_film
-    restart: unless-stopped
+    container_name: pgadmin
     environment:
-      PGADMIN_DEFAULT_EMAIL: admin@example.com
-      PGADMIN_DEFAULT_PASSWORD: password
+      PGADMIN_DEFAULT_EMAIL: admin@admin.com
+      PGADMIN_DEFAULT_PASSWORD: admin
     ports:
       - "8080:80"
+    volumes:
+      - pgadmin-data:/var/lib/pgadmin
     networks:
-      - webnet
+      - film-network
     depends_on:
       - postgres
 
 volumes:
-  frontend_dist:
-  postgres_data:
+  postgres-data:
+  pgadmin-data:
+  frontend-dist:
 
 networks:
-  webnet:
-    driver: bridge
+  film-network:

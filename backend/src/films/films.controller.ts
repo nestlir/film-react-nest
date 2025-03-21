@@ -1,30 +1,25 @@
-import {
-  Body,
-  Controller,
-  Get,
-  Param,
-  ParseUUIDPipe,
-  Post,
-} from '@nestjs/common';
+import { Controller, Get, Post, Param, Body } from '@nestjs/common';
 import { FilmsService } from './films.service';
-import { CreateFilmsDto } from './dto/films.dto';
+import { CreateFilmDto, GetFilmDto, GetScheduleDto } from './dto/films.dto';
 
 @Controller('films')
 export class FilmsController {
   constructor(private readonly filmsService: FilmsService) {}
 
-  @Get('/')
-  findAll() {
+  @Post()
+  create(@Body() createFilmDto: CreateFilmDto): Promise<GetFilmDto> {
+    return this.filmsService.createFilm(createFilmDto);
+  }
+
+  @Get('')
+  findAll(): Promise<{ items: GetFilmDto[]; total: number }> {
     return this.filmsService.findAll();
   }
 
-  @Get('/:id/schedule')
-  findSchedule(@Param('id', new ParseUUIDPipe()) id: string) {
-    return this.filmsService.findOne(id);
-  }
-
-  @Post('/')
-  create(@Body() createFilmDto: CreateFilmsDto) {
-    return this.filmsService.createFilm(createFilmDto);
+  @Get(':id/schedule')
+  findSchedules(
+    @Param('id') id: string,
+  ): Promise<{ items: GetScheduleDto[]; total: number }> {
+    return this.filmsService.findSchedules(id);
   }
 }

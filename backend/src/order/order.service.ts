@@ -6,7 +6,7 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Order } from './entities/order.entity';
-import { CreateOrdersDto, TicketsDto } from './dto/order.dto';
+import { CreateOrderDto, TicketDto, GetOrderDto } from './dto/order.dto';
 import { Film } from '../films/entities/films.entity';
 import { Schedule } from '../films/entities/schedule.entity';
 
@@ -22,86 +22,65 @@ export class OrderService {
   ) {}
 
   async getAllOrders(): Promise<Order[]> {
-    return await this.orderRepository.find({
-      relations: ['film', 'session'],
-    });
+    return this.orderRepository.find({ relations: ['film', 'session'] });
   }
 
-  async createOrder(orderDto: CreateOrdersDto): Promise<Order[]> {
-    console.log(
-      '🛒 Создание заказа с данными:',
-      JSON.stringify(orderDto, null, 2),
+  async createOrder(dto: CreateOrderDto): Promise<GetOrderDto[]> {
+    return Promise.all(
+      dto.tickets.map((ticket) => this.processTicket(ticket, dto)),
     );
-
-    if (!orderDto.tickets || !Array.isArray(orderDto.tickets)) {
-      throw new BadRequestException('❌ Ошибка: tickets должен быть массивом');
-    }
-
-    const orders = await Promise.all(
-      orderDto.tickets.map((ticket) => this.processTicket(ticket, orderDto)),
-    );
-
-    return orders;
   }
 
-  async processTicket(
-    ticket: TicketsDto,
-    orderDto: CreateOrdersDto,
-  ): Promise<Order> {
-    console.log('🎟️ Обрабатываем билет:', JSON.stringify(ticket, null, 2));
-
-    if (
-      !ticket ||
-      !ticket.film ||
-      !ticket.session ||
-      !ticket.row ||
-      !ticket.seat
-    ) {
-      throw new BadRequestException('❌ Ошибка: данные билета некорректны');
+  private async processTicket(
+    ticket: TicketDto,
+    dto: CreateOrderDto,
+  ): Promise<GetOrderDto> {
+    const film = await this.filmRepository.findOne({
+      where: { id: ticket.film },
+    });
+    if (!film) {
+      throw new NotFoundException(`Фильм с ID ${ticket.film} не найден.`);
     }
 
-    const filmEntity = await this.filmRepository.findOne({
-      where: { id: String(ticket.film) },
-      relations: ['schedules'], // ✅ Правильное имя связи
+    const session = await this.scheduleRepository.findOne({
+      where: { id: ticket.session, film: { id: ticket.film } },
+      relations: ['film'], // ✅ добавлено relations
     });
-
-    if (!filmEntity) {
-      throw new NotFoundException(`❌ Фильм с ID ${ticket.film} не найден.`);
+    if (!session) {
+      throw new NotFoundException(`Сеанс с ID ${ticket.session} не найден.`);
     }
 
-    const sessionEntity = await this.scheduleRepository.findOne({
-      where: { id: String(ticket.session), film: { id: ticket.film } },
-    });
-
-    if (!sessionEntity) {
-      throw new NotFoundException(`❌ Сеанс с ID ${ticket.session} не найден.`);
+    if (!Array.isArray(session.taken)) {
+      session.taken = []; // ✅ защита от пустого массива
     }
 
     const seatCode = `${ticket.row}:${ticket.seat}`;
-    const isTaken =
-      Array.isArray(sessionEntity.taken) &&
-      sessionEntity.taken.includes(seatCode);
-
-    if (isTaken) {
-      throw new BadRequestException(`❌ Место ${seatCode} уже забронировано.`);
+    if (session.taken.includes(seatCode)) {
+      throw new BadRequestException(`Место ${seatCode} уже забронировано.`);
     }
 
-    const newOrder = this.orderRepository.create({
-      film: filmEntity,
-      session: sessionEntity,
+    session.taken.push(seatCode);
+    await this.scheduleRepository.save(session);
+
+    const order = this.orderRepository.create({
+      film,
+      session,
       row: ticket.row,
       seat: ticket.seat,
-      email: orderDto.email,
-      phone: orderDto.phone,
+      email: dto.email,
+      phone: dto.phone,
     });
 
-    await this.orderRepository.save(newOrder);
+    const savedOrder = await this.orderRepository.save(order);
 
-    sessionEntity.taken = sessionEntity.taken
-      ? [...sessionEntity.taken, seatCode]
-      : [seatCode];
-    await this.scheduleRepository.save(sessionEntity);
-
-    return newOrder;
+    return {
+      id: savedOrder.id,
+      filmId: savedOrder.film.id,
+      sessionId: savedOrder.session.id,
+      row: savedOrder.row,
+      seat: savedOrder.seat,
+      email: savedOrder.email,
+      phone: savedOrder.phone,
+    };
   }
 }

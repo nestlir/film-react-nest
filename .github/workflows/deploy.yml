@@ -3,8 +3,8 @@ name: Build and Push Docker Images to GHCR
 on:
   push:
     branches:
-      - review-3  # ✅ Деплой срабатывает при пуше в `review-3`
-  workflow_dispatch:  # ✅ Возможность запустить вручную
+      - review-3
+  workflow_dispatch:
 
 permissions:
   packages: write
@@ -46,7 +46,7 @@ jobs:
       - name: Build and push Nginx image
         uses: docker/build-push-action@v5
         with:
-          context: ./nginx
+          context: .
           file: ./nginx/Dockerfile
           push: true
           tags: ghcr.io/nestlir/film-react-nest/nginx:review-3

@@ -1,13 +1,34 @@
-//TODO реализовать DTO для /orders
-import { Type } from 'class-transformer';
 import {
+  IsUUID,
+  IsInt,
+  Min,
+  IsString,
   IsArray,
   IsEmail,
-  IsNumber,
-  IsString,
   ValidateNested,
-  IsDate,
+  ArrayNotEmpty,
 } from 'class-validator';
+import { Type } from 'class-transformer';
+
+export class TicketDto {
+  @IsUUID()
+  film: string;
+
+  @IsUUID()
+  session: string;
+
+  @IsInt()
+  @Min(1)
+  row: number;
+
+  @IsInt()
+  @Min(1)
+  seat: number;
+
+  @IsInt()
+  @Min(0)
+  price: number;
+}
 
 export class CreateOrderDto {
   @IsEmail()
@@ -17,37 +38,19 @@ export class CreateOrderDto {
   phone: string;
 
   @IsArray()
+  @ArrayNotEmpty()
   @ValidateNested({ each: true })
   @Type(() => TicketDto)
   tickets: TicketDto[];
 }
 
-
-export class TicketDto {
-  @IsString()
-  film: string;
-
-  @IsString()
-  schedule: string;
-
-  @IsDate()
-  @Type(() => Date)
-  daytime: Date;
-
-  @IsNumber()
+// ✅ Добавь этот новый класс:
+export class GetOrderDto {
+  id: string;
+  filmId: string;
+  sessionId: string;
   row: number;
-
-  @IsNumber()
   seat: number;
-
-  @IsNumber()
-  price: number;
-}
-
-export class PaymentDto {
-  @IsEmail()
   email: string;
-
-  @IsString()
   phone: string;
 }

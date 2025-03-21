@@ -1,15 +1,39 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne } from 'typeorm';
-import { Film } from './film.entity';
+import {
+  Entity,
+  Column,
+  PrimaryGeneratedColumn,
+  ManyToOne,
+  OneToMany,
+} from 'typeorm';
+import { Film } from './films.entity';
+import { Order } from '../../order/entities/order.entity';
 
-@Entity()
+@Entity({ name: 'schedules' })
 export class Schedule {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
   @Column()
-  daytime: Date;
+  daytime: string;
 
-  @ManyToOne(() => Film, (film) => film.sessions, { onDelete: 'CASCADE' })
+  @Column()
+  hall: string;
+
+  @Column()
+  rows: number;
+
+  @Column()
+  seats: number;
+
+  @Column()
+  price: number;
+
+  @Column('text', { array: true, default: [] })
+  taken: string[];
+
+  @ManyToOne(() => Film, (film) => film.schedules, { onDelete: 'CASCADE' })
   film: Film;
-  orders: any;
+
+  @OneToMany(() => Order, (order) => order.session, { cascade: true })
+  orders: Order[];
 }

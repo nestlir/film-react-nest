@@ -5,12 +5,14 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile
+      args:
+        VITE_API_URL: /api/afisha
+        VITE_CDN_URL: /content/afisha
     container_name: frontend
     volumes:
       - frontend-dist:/app/dist
-    command: ["tail", "-f", "/dev/null"]
     networks:
-      - film-network
+      - webnet
 
   backend:
     build:
@@ -28,7 +30,7 @@ services:
       DATABASE_PASSWORD: 2706
       DATABASE_NAME: prac
     networks:
-      - film-network
+      - webnet
 
   nginx:
     build:
@@ -39,12 +41,12 @@ services:
       - "80:80"
     volumes:
       - ./nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
-      - frontend-dist:/usr/share/nginx/html:ro
+      - frontend-dist:/usr/share/nginx/html:ro # исправлено тут!
     depends_on:
       - frontend
       - backend
     networks:
-      - film-network
+      - webnet
 
   postgres:
     image: postgres:16-alpine
@@ -58,7 +60,7 @@ services:
     volumes:
       - postgres-data:/var/lib/postgresql/data
     networks:
-      - film-network
+      - webnet
 
   pgadmin:
     image: dpage/pgadmin4
@@ -71,7 +73,7 @@ services:
     volumes:
       - pgadmin-data:/var/lib/pgadmin
     networks:
-      - film-network
+      - webnet
     depends_on:
       - postgres
 
@@ -81,4 +83,4 @@ volumes:
   frontend-dist:
 
 networks:
-  film-network:
+  webnet:

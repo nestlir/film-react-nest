@@ -6,7 +6,7 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Order } from './entities/order.entity';
-import { TicketDto, GetOrderDto } from './dto/order.dto';
+import { TicketDto } from './dto/order.dto';
 import { Film } from '../films/entities/films.entity';
 import { Schedule } from '../films/entities/schedule.entity';
 import { v4 as uuid } from 'uuid';
@@ -28,40 +28,32 @@ export class OrderService {
     });
   }
 
-  async createOrder(
-    tickets: TicketDto[],
-    email: string,
-    phone: string,
-  ): Promise<GetOrderDto[]> {
+  async createOrders(tickets: TicketDto[]): Promise<Order[]> {
     const orderGroupId = uuid();
 
-    return Promise.all(
-      tickets.map((ticket) =>
-        this.processTicket(ticket, email, phone, orderGroupId),
-      ),
+    const savedOrders = await Promise.all(
+      tickets.map((ticket) => this.processTicket(ticket, orderGroupId)),
     );
+
+    return savedOrders;
   }
 
   private async processTicket(
     ticket: TicketDto,
-    email: string,
-    phone: string,
     orderGroupId: string,
-  ): Promise<GetOrderDto> {
+  ): Promise<Order> {
     const film = await this.filmRepository.findOne({
       where: { id: ticket.film },
     });
-    if (!film) {
-      throw new NotFoundException(`Фильм с ID ${ticket.film} не найден.`);
-    }
+    if (!film)
+      throw new NotFoundException(`Фильм с ID ${ticket.film} не найден`);
 
     const session = await this.scheduleRepository.findOne({
       where: { id: ticket.session, film: { id: ticket.film } },
       relations: ['film'],
     });
-    if (!session) {
-      throw new NotFoundException(`Сеанс с ID ${ticket.session} не найден.`);
-    }
+    if (!session)
+      throw new NotFoundException(`Сеанс с ID ${ticket.session} не найден`);
 
     if (!Array.isArray(session.taken)) {
       session.taken = [];
@@ -69,7 +61,7 @@ export class OrderService {
 
     const seatCode = `${ticket.row}:${ticket.seat}`;
     if (session.taken.includes(seatCode)) {
-      throw new BadRequestException(`Место ${seatCode} уже занято.`);
+      throw new BadRequestException(`Место ${seatCode} уже занято`);
     }
 
     session.taken.push(seatCode);
@@ -81,21 +73,9 @@ export class OrderService {
       session,
       row: ticket.row,
       seat: ticket.seat,
-      email,
-      phone,
       orderGroupId,
     });
 
-    const savedOrder = await this.orderRepository.save(order);
-
-    return {
-      film: savedOrder.film.id,
-      session: savedOrder.session.id,
-      daytime: session.daytime,
-      row: savedOrder.row,
-      seat: savedOrder.seat,
-      price: ticket.price,
-      id: savedOrder.id,
-    };
+    return await this.orderRepository.save(order);
   }
 }

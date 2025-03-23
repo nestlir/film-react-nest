@@ -1,11 +1,4 @@
-import {
-  IsString,
-  IsArray,
-  ValidateNested,
-  IsEmail,
-  IsInt,
-  Min,
-} from 'class-validator';
+import { IsString, IsArray, ValidateNested, IsInt, Min } from 'class-validator';
 import { Type } from 'class-transformer';
 
 export class TicketDto {
@@ -36,12 +29,6 @@ export class CreateOrderDto {
   @ValidateNested({ each: true })
   @Type(() => TicketDto)
   tickets: TicketDto[];
-
-  @IsEmail()
-  email: string;
-
-  @IsString()
-  phone: string;
 }
 
 export class GetOrderDto {

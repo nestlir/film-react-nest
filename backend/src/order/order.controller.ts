@@ -1,20 +1,17 @@
 import { Controller, Post, Body } from '@nestjs/common';
 import { OrderService } from './order.service';
 import { TicketDto } from './dto/order.dto';
-import { Order } from './entities/order.entity';
 
 @Controller('order')
 export class OrderController {
   constructor(private readonly orderService: OrderService) {}
 
   @Post()
-  async create(
-    @Body() tickets: TicketDto[],
-  ): Promise<{ total: number; items: Order[] }> {
-    const items = await this.orderService.createOrders(tickets);
+  async createOrder(@Body() tickets: TicketDto[]) {
+    const result = await this.orderService.create(tickets);
     return {
-      total: items.length,
-      items,
+      total: result.length,
+      items: result,
     };
   }
 }

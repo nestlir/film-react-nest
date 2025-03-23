@@ -22,20 +22,23 @@ export class OrderService {
     private readonly scheduleRepository: Repository<Schedule>,
   ) {}
 
-  async getAllOrders(): Promise<Order[]> {
-    return this.orderRepository.find({
-      relations: ['film', 'session'],
-    });
-  }
-
-  async createOrders(tickets: TicketDto[]): Promise<Order[]> {
+  async create(tickets: TicketDto[]) {
     const orderGroupId = uuid();
 
     const savedOrders = await Promise.all(
       tickets.map((ticket) => this.processTicket(ticket, orderGroupId)),
     );
 
-    return savedOrders;
+    // Возвращаем в нужном формате
+    return savedOrders.map((order) => ({
+      id: order.id,
+      film: order.film.id,
+      session: order.session.id,
+      daytime: order.session.daytime,
+      row: order.row,
+      seat: order.seat,
+      price: order.session.price,
+    }));
   }
 
   private async processTicket(

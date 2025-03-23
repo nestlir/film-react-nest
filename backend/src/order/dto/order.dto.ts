@@ -1,5 +1,4 @@
-import { IsString, IsArray, ValidateNested, IsInt, Min } from 'class-validator';
-import { Type } from 'class-transformer';
+import { IsString, IsNumber, IsDateString } from 'class-validator';
 
 export class TicketDto {
   @IsString()
@@ -8,35 +7,15 @@ export class TicketDto {
   @IsString()
   session: string;
 
-  @IsString()
+  @IsDateString()
   daytime: string;
 
-  @IsInt()
-  @Min(1)
+  @IsNumber()
   row: number;
 
-  @IsInt()
-  @Min(1)
+  @IsNumber()
   seat: number;
 
-  @IsInt()
-  @Min(0)
+  @IsNumber()
   price: number;
-}
-
-export class CreateOrderDto {
-  @IsArray()
-  @ValidateNested({ each: true })
-  @Type(() => TicketDto)
-  tickets: TicketDto[];
-}
-
-export class GetOrderDto {
-  film: string;
-  session: string;
-  daytime: string;
-  row: number;
-  seat: number;
-  price: number;
-  id: string;
 }

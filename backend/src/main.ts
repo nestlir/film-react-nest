@@ -21,14 +21,8 @@ async function bootstrap() {
 
   app.useLogger(logger);
 
-  // ✅ ГЛАВНЫЙ ФИКС:
   app.useGlobalPipes(
-    new ValidationPipe({
-      whitelist: true,
-      transform: true,
-      forbidNonWhitelisted: true,
-      forbidUnknownValues: false,
-    }),
+    new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true }),
   );
 
   await app.listen(3000);

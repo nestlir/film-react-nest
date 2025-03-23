@@ -11,7 +11,7 @@ export class FilmsController {
     return this.filmsService.createFilm(createFilmDto);
   }
 
-  @Get('')
+  @Get()
   findAll(): Promise<{ items: GetFilmDto[]; total: number }> {
     return this.filmsService.findAll();
   }

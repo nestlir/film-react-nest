@@ -34,4 +34,7 @@ export class Order {
 
   @Column()
   phone: string;
+
+  @Column()
+  orderGroupId: string;
 }

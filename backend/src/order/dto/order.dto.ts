@@ -1,21 +1,22 @@
 import {
-  IsUUID,
-  IsInt,
-  Min,
   IsString,
   IsArray,
-  IsEmail,
   ValidateNested,
-  ArrayNotEmpty,
+  IsEmail,
+  IsInt,
+  Min,
 } from 'class-validator';
 import { Type } from 'class-transformer';
 
 export class TicketDto {
-  @IsUUID()
+  @IsString()
   film: string;
 
-  @IsUUID()
+  @IsString()
   session: string;
+
+  @IsString()
+  daytime: string;
 
   @IsInt()
   @Min(1)
@@ -31,26 +32,25 @@ export class TicketDto {
 }
 
 export class CreateOrderDto {
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => TicketDto)
+  tickets: TicketDto[];
+
   @IsEmail()
   email: string;
 
   @IsString()
   phone: string;
-
-  @IsArray()
-  @ArrayNotEmpty()
-  @ValidateNested({ each: true })
-  @Type(() => TicketDto)
-  tickets: TicketDto[];
 }
 
 // ✅ Добавь этот новый класс:
 export class GetOrderDto {
-  id: string;
-  filmId: string;
-  sessionId: string;
+  film: string;
+  session: string;
+  daytime: string;
   row: number;
   seat: number;
-  email: string;
-  phone: string;
+  price: number;
+  id: string;
 }

@@ -1,11 +1,12 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
-import 'dotenv/config';
+import { ValidationPipe } from '@nestjs/common';
 import { JsonLogger } from './logger/json.logger';
 import { TskvLogger } from './logger/tskv.logger';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+
   app.setGlobalPrefix('api/afisha');
   app.enableCors();
 
@@ -19,6 +20,16 @@ async function bootstrap() {
   }
 
   app.useLogger(logger);
+
+  // ✅ ГЛАВНЫЙ ФИКС:
+  app.useGlobalPipes(
+    new ValidationPipe({
+      whitelist: true,
+      transform: true,
+      forbidNonWhitelisted: true,
+      forbidUnknownValues: false,
+    }),
+  );
 
   await app.listen(3000);
 }

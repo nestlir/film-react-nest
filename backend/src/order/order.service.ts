@@ -6,9 +6,10 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Order } from './entities/order.entity';
-import { CreateOrderDto, TicketDto, GetOrderDto } from './dto/order.dto';
+import { TicketDto, GetOrderDto } from './dto/order.dto';
 import { Film } from '../films/entities/films.entity';
 import { Schedule } from '../films/entities/schedule.entity';
+import { v4 as uuid } from 'uuid';
 
 @Injectable()
 export class OrderService {
@@ -22,18 +23,31 @@ export class OrderService {
   ) {}
 
   async getAllOrders(): Promise<Order[]> {
-    return this.orderRepository.find({ relations: ['film', 'session'] });
+    return this.orderRepository.find({
+      relations: ['film', 'session'],
+    });
   }
 
-  async createOrder(dto: CreateOrderDto): Promise<GetOrderDto[]> {
+  async createOrder(tickets: TicketDto[]): Promise<GetOrderDto[]> {
+    const orderGroupId = uuid();
+
     return Promise.all(
-      dto.tickets.map((ticket) => this.processTicket(ticket, dto)),
+      tickets.map((ticket) =>
+        this.processTicket(
+          ticket,
+          'anonymous@example.com', // или "" если не нужны
+          'no-phone',
+          orderGroupId,
+        ),
+      ),
     );
   }
 
   private async processTicket(
     ticket: TicketDto,
-    dto: CreateOrderDto,
+    email: string,
+    phone: string,
+    orderGroupId: string,
   ): Promise<GetOrderDto> {
     const film = await this.filmRepository.findOne({
       where: { id: ticket.film },
@@ -42,45 +56,52 @@ export class OrderService {
       throw new NotFoundException(`Фильм с ID ${ticket.film} не найден.`);
     }
 
+    // Проверка сессии
     const session = await this.scheduleRepository.findOne({
       where: { id: ticket.session, film: { id: ticket.film } },
-      relations: ['film'], // ✅ добавлено relations
+      relations: ['film'],
     });
     if (!session) {
       throw new NotFoundException(`Сеанс с ID ${ticket.session} не найден.`);
     }
 
+    // Защита от некорректного taken
     if (!Array.isArray(session.taken)) {
-      session.taken = []; // ✅ защита от пустого массива
+      session.taken = [];
     }
 
+    // Проверка занятости места
     const seatCode = `${ticket.row}:${ticket.seat}`;
     if (session.taken.includes(seatCode)) {
-      throw new BadRequestException(`Место ${seatCode} уже забронировано.`);
+      throw new BadRequestException(`Место ${seatCode} уже занято.`);
     }
 
+    // Добавление места в занятие
     session.taken.push(seatCode);
     await this.scheduleRepository.save(session);
 
+    // Создание заказа
     const order = this.orderRepository.create({
-      film,
+      id: uuid(),
+      film: session.film,
       session,
       row: ticket.row,
       seat: ticket.seat,
-      email: dto.email,
-      phone: dto.phone,
+      email,
+      phone,
+      orderGroupId,
     });
 
     const savedOrder = await this.orderRepository.save(order);
 
     return {
-      id: savedOrder.id,
-      filmId: savedOrder.film.id,
-      sessionId: savedOrder.session.id,
+      film: savedOrder.film.id,
+      session: savedOrder.session.id,
+      daytime: session.daytime,
       row: savedOrder.row,
       seat: savedOrder.seat,
-      email: savedOrder.email,
-      phone: savedOrder.phone,
+      price: ticket.price,
+      id: savedOrder.id,
     };
   }
 }

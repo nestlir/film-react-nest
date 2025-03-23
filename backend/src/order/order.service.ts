@@ -39,16 +39,21 @@ export class OrderService {
   }
 
   private async processTicket(ticket: CreateTicketDto): Promise<Order> {
+    console.log('📥 Билет получен:', ticket);
+
     const film = await this.filmRepository.findOne({
       where: { id: ticket.film },
     });
-    if (!film)
-      throw new NotFoundException(`Фильм с ID ${ticket.film} не найден`);
+    console.log('🎬 Найден фильм:', film);
 
     const session = await this.scheduleRepository.findOne({
       where: { id: ticket.session, film: { id: ticket.film } },
       relations: ['film'],
     });
+    console.log('🕒 Найден сеанс:', session);
+
+    if (!film)
+      throw new NotFoundException(`Фильм с ID ${ticket.film} не найден`);
     if (!session)
       throw new NotFoundException(`Сеанс с ID ${ticket.session} не найден`);
 
@@ -72,6 +77,7 @@ export class OrderService {
       seat: ticket.seat,
     });
 
+    console.log('✅ Готовый заказ:', order);
     return await this.orderRepository.save(order);
   }
 }

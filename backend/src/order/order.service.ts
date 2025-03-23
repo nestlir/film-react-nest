@@ -28,17 +28,16 @@ export class OrderService {
     });
   }
 
-  async createOrder(tickets: TicketDto[]): Promise<GetOrderDto[]> {
+  async createOrder(
+    tickets: TicketDto[],
+    email: string,
+    phone: string,
+  ): Promise<GetOrderDto[]> {
     const orderGroupId = uuid();
 
     return Promise.all(
       tickets.map((ticket) =>
-        this.processTicket(
-          ticket,
-          'anonymous@example.com', // или "" если не нужны
-          'no-phone',
-          orderGroupId,
-        ),
+        this.processTicket(ticket, email, phone, orderGroupId),
       ),
     );
   }
@@ -56,7 +55,6 @@ export class OrderService {
       throw new NotFoundException(`Фильм с ID ${ticket.film} не найден.`);
     }
 
-    // Проверка сессии
     const session = await this.scheduleRepository.findOne({
       where: { id: ticket.session, film: { id: ticket.film } },
       relations: ['film'],
@@ -65,22 +63,18 @@ export class OrderService {
       throw new NotFoundException(`Сеанс с ID ${ticket.session} не найден.`);
     }
 
-    // Защита от некорректного taken
     if (!Array.isArray(session.taken)) {
       session.taken = [];
     }
 
-    // Проверка занятости места
     const seatCode = `${ticket.row}:${ticket.seat}`;
     if (session.taken.includes(seatCode)) {
       throw new BadRequestException(`Место ${seatCode} уже занято.`);
     }
 
-    // Добавление места в занятие
     session.taken.push(seatCode);
     await this.scheduleRepository.save(session);
 
-    // Создание заказа
     const order = this.orderRepository.create({
       id: uuid(),
       film: session.film,

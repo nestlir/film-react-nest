@@ -44,7 +44,6 @@ export class CreateOrderDto {
   phone: string;
 }
 
-// ✅ Добавь этот новый класс:
 export class GetOrderDto {
   film: string;
   session: string;

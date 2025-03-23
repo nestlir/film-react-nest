@@ -10,8 +10,8 @@ export class OrderController {
   async create(
     @Body() createOrderDto: CreateOrderDto,
   ): Promise<{ total: number; items: GetOrderDto[] }> {
-    const { tickets } = createOrderDto;
-    const items = await this.orderService.createOrder(tickets);
+    const { tickets, email, phone } = createOrderDto;
+    const items = await this.orderService.createOrder(tickets, email, phone);
 
     return {
       total: items.length,

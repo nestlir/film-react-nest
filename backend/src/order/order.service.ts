@@ -6,7 +6,7 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Order } from './entities/order.entity';
-import { TicketDto } from './dto/order.dto';
+import { CreateTicketDto } from './dto/order.dto';
 import { Film } from '../films/entities/films.entity';
 import { Schedule } from '../films/entities/schedule.entity';
 import { v4 as uuid } from 'uuid';
@@ -22,14 +22,11 @@ export class OrderService {
     private readonly scheduleRepository: Repository<Schedule>,
   ) {}
 
-  async create(tickets: TicketDto[]) {
-    const orderGroupId = uuid();
-
+  async createOrders(tickets: CreateTicketDto[]) {
     const savedOrders = await Promise.all(
-      tickets.map((ticket) => this.processTicket(ticket, orderGroupId)),
+      tickets.map((ticket) => this.processTicket(ticket)),
     );
 
-    // Возвращаем в нужном формате
     return savedOrders.map((order) => ({
       id: order.id,
       film: order.film.id,
@@ -41,10 +38,7 @@ export class OrderService {
     }));
   }
 
-  private async processTicket(
-    ticket: TicketDto,
-    orderGroupId: string,
-  ): Promise<Order> {
+  private async processTicket(ticket: CreateTicketDto): Promise<Order> {
     const film = await this.filmRepository.findOne({
       where: { id: ticket.film },
     });
@@ -76,7 +70,6 @@ export class OrderService {
       session,
       row: ticket.row,
       seat: ticket.seat,
-      orderGroupId,
     });
 
     return await this.orderRepository.save(order);

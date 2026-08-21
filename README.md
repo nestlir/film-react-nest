@@ -1,36 +1,47 @@
-# FILM!
+# FILM! — Full-Stack Media Application
 
-## Установка
+> Full-stack application combining a React client with a NestJS backend and MongoDB persistence.
 
-### MongoDB
+## Overview
 
-Установите MongoDB скачав дистрибутив с официального сайта или с помощью пакетного менеджера вашей ОС. Также можно воспользоваться Docker (см. ветку `feat/docker`.
+FILM! is a media-oriented application built as a full-stack system. The project connects a browser client to a server API backed by MongoDB and demonstrates the complete request path from UI to persistence.
 
-Выполните скрипт `test/mongodb_initial_stub.js` в консоли `mongo`.
+## Architecture
 
-### Бэкенд
+**Frontend → NestJS API → MongoDB**
 
-Перейдите в папку с исходным кодом бэкенда
+The backend exposes application endpoints and uses environment-based database configuration. MongoDB provides persistent storage for the application's domain data.
 
-`cd backend`
+## What I demonstrated
 
-Установите зависимости (точно такие же, как в package-lock.json) помощью команд
+- React frontend integration;
+- NestJS backend structure;
+- REST API design;
+- MongoDB persistence;
+- environment-based configuration;
+- local development with Docker-ready infrastructure;
+- API verification with Postman/curl.
 
-`npm ci` или `yarn install --frozen-lockfile`
+## Stack
 
-Создайте `.env` файл из примера `.env.example`, в нём укажите:
+**React · NestJS · TypeScript · MongoDB · REST API · Docker**
 
-* `DATABASE_DRIVER` - тип драйвера СУБД - в нашем случае это `mongodb` 
-* `DATABASE_URL` - адрес СУБД MongoDB, например `mongodb://127.0.0.1:27017/practicum`.  
+## Backend setup
 
-MongoDB должна быть установлена и запущена.
+```bash
+cd backend
+npm ci
+```
 
-Запустите бэкенд:
+Create `.env` from `.env.example` and configure:
 
-`npm start:debug`
+```env
+DATABASE_DRIVER=mongodb
+DATABASE_URL=mongodb://127.0.0.1:27017/practicum
+```
 
-Для проверки отправьте тестовый запрос с помощью Postman или `curl`.
+Start the backend in development mode using the repository's debug/start script.
 
+## Context
 
-
-
+Originally created during full-stack training; presented here as a compact case study of frontend/backend integration, API design and persistence.

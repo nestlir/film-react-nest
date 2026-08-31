@@ -1,47 +1,85 @@
 # FILM! — Full-Stack Media Application
 
-> Full-stack application combining a React client with a NestJS backend and MongoDB persistence.
-
-## Overview
-
-FILM! is a media-oriented application built as a full-stack system. The project connects a browser client to a server API backed by MongoDB and demonstrates the complete request path from UI to persistence.
+Full-stack media application combining a React client, a NestJS API and MongoDB persistence.
 
 ## Architecture
 
-**Frontend → NestJS API → MongoDB**
+```text
+React frontend → NestJS REST API → MongoDB
+```
 
-The backend exposes application endpoints and uses environment-based database configuration. MongoDB provides persistent storage for the application's domain data.
-
-## What I demonstrated
-
-- React frontend integration;
-- NestJS backend structure;
-- REST API design;
-- MongoDB persistence;
-- environment-based configuration;
-- local development with Docker-ready infrastructure;
-- API verification with Postman/curl.
+The project demonstrates the complete path from browser UI through server-side application logic to persistent storage.
 
 ## Stack
 
-**React · NestJS · TypeScript · MongoDB · REST API · Docker**
+**Frontend:** React  
+**Backend:** NestJS · TypeScript  
+**Database:** MongoDB · Mongoose  
+**API:** REST  
+**Tooling:** ESLint · Prettier · Jest
+
+## Repository structure
+
+```text
+backend/          NestJS application and API
+.github/workflows Automated checks
+README.md         Project overview
+```
 
 ## Backend setup
+
+Requirements:
+
+- Node.js 20+
+- npm
+- MongoDB
+
+Install dependencies:
 
 ```bash
 cd backend
 npm ci
 ```
 
-Create `.env` from `.env.example` and configure:
+Create a local environment file:
+
+```bash
+cp .env.example .env
+```
+
+Configure the database connection:
 
 ```env
 DATABASE_DRIVER=mongodb
 DATABASE_URL=mongodb://127.0.0.1:27017/practicum
 ```
 
-Start the backend in development mode using the repository's debug/start script.
+Start development mode:
 
-## Context
+```bash
+npm run start:dev
+```
 
-Originally created during full-stack training; presented here as a compact case study of frontend/backend integration, API design and persistence.
+## Production
+
+```bash
+npm run build
+npm run start:prod
+```
+
+## Testing and quality
+
+```bash
+npm run test
+npm run test:cov
+npm run test:e2e
+npm run lint
+```
+
+## Deployment
+
+The backend requires a Node.js runtime and MongoDB, so it cannot be deployed to GitHub Pages. The repository is structured for deployment to a backend hosting platform or container environment; GitHub Actions are used for automated checks.
+
+## Project value
+
+This project is an architecture-focused full-stack case study demonstrating React/NestJS integration, REST API design, environment-based configuration and MongoDB persistence.

@@ -1,19 +1,24 @@
 import { Module } from '@nestjs/common';
-import {ServeStaticModule} from "@nestjs/serve-static";
-import {ConfigModule} from "@nestjs/config";
-import * as path from "node:path";
-
-import {configProvider} from "./app.config.provider";
+import { MongooseModule } from '@nestjs/mongoose';
+import { ServeStaticModule } from '@nestjs/serve-static';
+import { join } from 'path';
+import { FilmsModule } from './films/module/films.module';
+import { OrderModule } from './order/module/order.module';
 
 @Module({
   imports: [
-	ConfigModule.forRoot({
-          isGlobal: true,
-          cache: true
-      }),
-      // @todo: Добавьте раздачу статических файлов из public
+    // Подключение к MongoDB
+    MongooseModule.forRoot(
+      process.env.DATABASE_URL || 'mongodb://localhost:27017/practicum',
+    ),
+    // Раздача статического контента
+    ServeStaticModule.forRoot({
+      rootPath: join(__dirname, '..', 'public'),
+      serveRoot: '/content/afisha',
+    }),
+    // Импорт модулей
+    FilmsModule,
+    OrderModule,
   ],
-  controllers: [],
-  providers: [configProvider],
 })
 export class AppModule {}
